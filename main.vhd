@@ -100,6 +100,7 @@ Generic (n : integer := 10); --should always be 10
   );
 end component;
 	
+
 --========== FETCH ============
 signal fetchInput 	: fetch_in;
 signal fetchOutput 	: fetch_out;
@@ -143,19 +144,15 @@ signal WBdata		: word;
 
 
 --====================================================== FETCH -====================================================== 
-fetch_stage		: Fetch port map( clk, fetchInput, fetchOutput);
-	--out
-	--	Instruction : word;
-	--	PC_fetch_Out : word;
-	
+fetch_stage		: FetchÂ portÂ map( clk, fetchInput, fetchOutput);
 	fetchInput.PC_Src <=cuOutput.PC_Src;
-	fetchInput.PC_Src_WB <=buffer4Output.PC_Src;	--PROPAGATE THROUGH BUFFERS
-	fetchInput.WB_Out <=WBdata;			--PROPAGATED mn al MUX at wb
+	fetchInput.PC_Src_WB <=buffer4Output.PC_Src;	
+	fetchInput.WB_Out <=buffer4Output.memData  when (cuOutput.PC_Src /= "10") else 
+				decodeOutput.Data2;			
 
 ----- BUFFER 1 -----
 buffer_fetchDecode	: buffer1Type  port map (clk,rst=>FlushBit_1, we=>cuOutput.Write_En_Buffer1, d=>buffer1Input ,q=>buffer1Output); 
 
-	--buffer1Input.fetchOutput<=fetchOutput;
 	buffer1Input.Instruction<=fetchOutput.Instruction;
 	buffer1Input.PC_fetch_Out<=fetchOutput.PC_fetch_Out;
 ---====================================================== DECODE -====================================================== 
@@ -167,7 +164,7 @@ buffer_fetchDecode	: buffer1Type  port map (clk,rst=>FlushBit_1, we=>cuOutput.Wr
 	--	else '0';
 FlushBit_1<= '1' when (hduOutput.Flush='1') or (hduOutput.Flush_Mem='1')
 else '0';
-decode_stage		: Decode port map( clk, decodeInput, decodeOutput);
+decode_stage		: DecodeÂ portÂ map( clk, decodeInput, decodeOutput);
 	
 	decodeInput.Instruction <=buffer1Output.Instruction;
    	decodeInput.Write_Address <= buffer4Output.Instruction(7 downto 5); 		
@@ -176,16 +173,16 @@ decode_stage		: Decode port map( clk, decodeInput, decodeOutput);
 	decodeInput.Write_Stack_Enable <= cuOutput.Mem_Stack;
 	decodeInput.Write_Stack_Val <= SP_unit_output&"000000";
 
-controlUnit		: CU port map( cuInput, cuOutput);
+controlUnit		: CUÂ portÂ map( cuInput, cuOutput);
 	cuInput.OpCode <= buffer1Output.Instruction(15 downto 11);
-	cuInput.Flag <= executeOutput.Flags;	 			-- not quite sure
+	cuInput.Flag <= executeOutput.Flags;	 	
 	cuInput.Interrupt <= interrupt;
 	cuInput.Reseti <= reset;
 	cuInput.Stall<=hduOutput.Stall;
 
 
 
-forwardUnit		: FU port map( fuInput, fuOutput);
+forwardUnit		: FUÂ portÂ map( fuInput, fuOutput);
 	fuInput.RegSrc_Id  <= buffer1Output.Instruction(10 downto 8);
 	fuInput.RegDst_Id  <= buffer1Output.Instruction(7 downto 5);
 	fuInput.RegDst_ExMem  <= buffer2Output.Instruction(7 downto 5);	--PROPAGATE instruction/ immediate value
@@ -195,7 +192,7 @@ forwardUnit		: FU port map( fuInput, fuOutput);
 	fuInput.RegWrite_MemWB  <= buffer4Output.Reg_Write;			-- PROPAGATED: write back signal to write on the registers
 
 
-HazardDetectionUnit	: HDU port map( hduInput, hduOutput);
+HazardDetectionUnit	: HDUÂ portÂ map( hduInput, hduOutput);
 	
 	hduInput.Next_Stage_Reg <= buffer2Output.Instruction(7 downto 5);	--PROPAGATE instruction/ immediate value
 	hduInput.Reg_Used <= cuOutput.RegTwoOp;
@@ -211,7 +208,7 @@ HazardDetectionUnit	: HDU port map( hduInput, hduOutput);
 	
 
 
-StackPointerUnit	: SPunit generic map (n=>10) port map( clk, en=>cuOutput.Mem_Stack, addSub=>cuOutput.addSub_stack, SPin=> decodeOutput.Out_STACK(9 downto 0), SPout=> SP_unit_output, SPout_prev=>SP_unit_prev);
+StackPointerUnit	: SPunitÂ generic map (n=>10) portÂ map( clk, en=>cuOutput.Mem_Stack, addSub=>cuOutput.addSub_stack, SPin=> decodeOutput.Out_STACK(9 downto 0), SPout=> SP_unit_output, SPout_prev=>SP_unit_prev);
 	
 
 ------ BUFFER 2 ------
@@ -244,7 +241,7 @@ buffer_decodeEx		: buffer2Type port map (clk,rst=>hduOutput.Flush_Mem, we=>'1', 
 	buffer2Input.intBit<=cuOutput.intBit;
 	buffer2Input.SPaddr<=SP_propagated;
 ---====================================================== EXECUTE ====================================================== 
-execute_stage		: instruction_executor port map( clk, reset, executeInput, executeOutput);
+execute_stage		: instruction_executorÂ portÂ map( clk, reset, executeInput, executeOutput);
 
 --in
 	executeInput.FWDA <= buffer2Output.FWDA;
@@ -290,7 +287,7 @@ buffer_exMem		: buffer3Type port map (clk,rst=>reset, we=>'1', d=>buffer3Input ,
 	buffer3Input.CCRflags<=executeOutput.Flags;
 
 ---====================================================== MEMORY -====================================================== 
-Memory_stage		: memory_unit port map( clk, memoryInput, memoryOutput);
+Memory_stage		: memory_unitÂ portÂ map( clk, memoryInput, memoryOutput);
 
 PC_out_memStage		<= std_logic_vector(unsigned(buffer3Output.PC_out) + 1) when buffer3Output.Call_Sig ='1' 
 			else buffer3Output.PC_out;
@@ -334,6 +331,5 @@ WBdata<= buffer4Output.immediate when buffer4Output.WB_Src = "01"		--propagated
 
 outPort <= WBdata when buffer4Output.Outport='1'		
 		else "XXXXXXXXXXXXXXXX";
-
 
 end Architecture a_main;
