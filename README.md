@@ -1,6 +1,6 @@
 # Pipelined-Processor
-
-A simple 5-stage pipelined microprocessor with RISC-like instruction set architecture.
+[![GitHub license](https://img.shields.io/github/license/MichaelKMalak/Pipelined-Processor)](https://github.com/MichaelKMalak/Pipelined-Processor/blob/master/LICENSE)
+<br>A simple 5-stage pipelined microprocessor with RISC-like instruction set architecture.
 
 ## Introduction
 The processor in this project has a RISC-like instruction set architecture. There are eight 2-byte general purpose registers; R0, R1, R2, R3, R4, R5, R6, and R7. R7 works as program counter (PC). R6 works as a stack pointer (SP); and hence; points to the top of the stack. The initial value of SP is 1023. The memory address space is 1 KB of 16-bit width and is word addressable. ( N.B. word = 2 bytes)
