@@ -23,12 +23,14 @@ When an interrupt occurs, the processor finishes the currently fetched instructi
 
 ### B) Input-Output
 
-IN.PORT<15:0> ; 16-bit data input port
-OUT.PORT<15:0> ; 16-bit data output port
-INTR.IN<0> ; a single, non-maskable interrupt
-RESET.IN<0> ; reset signal
-1
-Rsrc ; 1st operand register
-Rdst ; 2nd operand register and result register field
-EA ; Effective address
-Imm ; Immediate Value (16 bit)
+| Command  | Details |
+| --- | --- |
+| IN.PORT<15:0> | 16-bit data input port |
+| OUT.PORT<15:0> | 16-bit data output port |
+| INTR.IN<0> | a single, non-maskable interrupt |
+| RESET.IN<0>|  reset signal |
+| Rsrc | 1st operand register |
+| Rdst | 2nd operand register and result register field|
+| EA |  Effective address |
+| Imm | Immediate Value (16 bit)|
+
